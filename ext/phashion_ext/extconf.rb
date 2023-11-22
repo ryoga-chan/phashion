@@ -21,8 +21,12 @@ Dir.chdir(BASEDIR) do
     raise "'#{cmd}' failed" unless system(cmd)
 
     puts "patching pHash sources for PNG alpha channel support"
-    puts(cmd = "patch -d pHash-0.9.6 -p1 < #{File.join 'patches', 'png_alpha.diff'}")
+    puts(cmd = "patch -d pHash-0.9.6 -p1 < patches/png_alpha.diff")
     raise "'#{cmd}' failed" unless system(cmd)
+
+    puts "updating config.{guess,sub} to support newer architectures"
+    FileUtils.cp_f 'patches/config.sub'  , BASEDIR
+    FileUtils.cp_f 'patches/config.guess', BASEDIR
 
     Dir.chdir(BUNDLE_PATH) do
       puts(cmd = "env CXXFLAGS='#{$CXXFLAGS}' CFLAGS='#{$CFLAGS}' LDFLAGS='#{$LDFLAGS}' ./configure --prefix=#{BASEDIR} --disable-audio-hash --disable-video-hash --disable-shared --with-pic 2>&1")
