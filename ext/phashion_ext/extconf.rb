@@ -1,4 +1,5 @@
 require 'mkmf'
+require 'fileutils'
 
 BASEDIR     = File.expand_path(File.dirname(__FILE__))
 BUNDLE      = Dir.glob("#{BASEDIR}/pHash-*.tar.gz").first
@@ -17,6 +18,10 @@ Dir.chdir(BASEDIR) do
     puts "pHash already built; run 'rake clean' first if you need to rebuild."
   else
     puts(cmd = "tar xzf #{BUNDLE} 2>&1")
+    raise "'#{cmd}' failed" unless system(cmd)
+
+    puts "patching pHash sources for PNG alpha channel support"
+    puts(cmd = "patch -d pHash-0.9.6 -p1 < #{File.join 'patches', 'png_alpha.diff'}")
     raise "'#{cmd}' failed" unless system(cmd)
 
     Dir.chdir(BUNDLE_PATH) do
