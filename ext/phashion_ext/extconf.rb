@@ -1,27 +1,26 @@
 require 'mkmf'
 
-HERE = File.expand_path(File.dirname(__FILE__))
-BUNDLE = Dir.glob("#{HERE}/pHash-*.tar.gz").first
+BASEDIR     = File.expand_path(File.dirname(__FILE__))
+BUNDLE      = Dir.glob("#{BASEDIR}/pHash-*.tar.gz").first
 BUNDLE_PATH = BUNDLE.gsub(".tar.gz", "")
-$CFLAGS = " -x c++ #{ENV["CFLAGS"]}"
-$CFLAGS += " -fdeclspec" if RUBY_PLATFORM =~ /darwin/
-$includes = " -I#{HERE}/include"
-$libraries = " -L#{HERE}/lib -L/usr/local/lib"
-$LIBPATH = ["#{HERE}/lib"]
-$CFLAGS = "#{$includes} #{$libraries} #{$CFLAGS}"
-$LDFLAGS = "#{$libraries} #{$LDFLAGS}"
-$CXXFLAGS = ' -pthread'  
+$CFLAGS     = " -x c++ #{ENV["CFLAGS"]}"
+$CFLAGS    += " -fdeclspec" if RUBY_PLATFORM =~ /darwin/
+$includes   = " -I#{BASEDIR}/include"
+$libraries  = " -L#{BASEDIR}/lib -L/usr/local/lib"
+$LIBPATH    = ["#{BASEDIR}/lib"]
+$CFLAGS     = "#{$includes} #{$libraries} #{$CFLAGS}"
+$LDFLAGS    = "#{$libraries} #{$LDFLAGS}"
+$CXXFLAGS   = ' -pthread'
 
-Dir.chdir(HERE) do
+Dir.chdir(BASEDIR) do
   if File.exist?("lib")
     puts "pHash already built; run 'rake clean' first if you need to rebuild."
   else
-
     puts(cmd = "tar xzf #{BUNDLE} 2>&1")
     raise "'#{cmd}' failed" unless system(cmd)
 
     Dir.chdir(BUNDLE_PATH) do
-      puts(cmd = "env CXXFLAGS='#{$CXXFLAGS}' CFLAGS='#{$CFLAGS}' LDFLAGS='#{$LDFLAGS}' ./configure --prefix=#{HERE} --disable-audio-hash --disable-video-hash --disable-shared --with-pic 2>&1")
+      puts(cmd = "env CXXFLAGS='#{$CXXFLAGS}' CFLAGS='#{$CFLAGS}' LDFLAGS='#{$LDFLAGS}' ./configure --prefix=#{BASEDIR} --disable-audio-hash --disable-video-hash --disable-shared --with-pic 2>&1")
       raise "'#{cmd}' failed" unless system(cmd)
 
       puts(cmd = "make || true 2>&1")
@@ -37,12 +36,13 @@ Dir.chdir(HERE) do
     system("rm -rf #{BUNDLE_PATH}") unless ENV['DEBUG'] or ENV['DEV']
   end
 
-  Dir.chdir("#{HERE}/lib") do
-    system("cp -f libpHash.a libpHash_gem.a")
+  Dir.chdir("#{BASEDIR}/lib") do
+    system("cp -f libpHash.a  libpHash_gem.a")
     system("cp -f libpHash.la libpHash_gem.la")
-  end
+  end # Dir.chdir /lib
+
   $LIBS = " -lpthread -lpHash_gem -lstdc++ -ljpeg -lpng -lm"
-end
+end # Dir.chdir /
 
 have_header 'sqlite3ext.h'
 
